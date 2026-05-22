@@ -1,15 +1,24 @@
 import { colorForNumber } from '../lib/colors';
-import type { CellState } from '../lib/types';
-import { TOWER_SIZE } from '../lib/towerState';
+import type { CellState, ClickAction } from '../lib/types';
 import './Tower.css';
 
 interface TowerProps {
   cells: CellState[];
-  highlightTop: number | null;
+  nextCell: number | null;
+  groupSize?: number; // für Mal-Modus optische Gruppengrenzen
+  onCellClick: (n: number) => void;
+  getAction: (n: number) => ClickAction | null;
+  disabled?: boolean;
 }
 
-export function Tower({ cells, highlightTop }: TowerProps) {
-  // Etagen von oben (9) nach unten (0) rendern, damit Etage 0 visuell unten liegt.
+export function Tower({
+  cells,
+  nextCell,
+  groupSize,
+  onCellClick,
+  getAction,
+  disabled,
+}: TowerProps) {
   const floors: number[] = [];
   for (let f = 9; f >= 0; f--) floors.push(f);
 
@@ -24,12 +33,18 @@ export function Tower({ cells, highlightTop }: TowerProps) {
             {Array.from({ length: 10 }, (_, step) => {
               const number = floor * 10 + step + 1;
               const cell = cells[number - 1] ?? { kind: 'empty' };
+              const action = disabled ? null : getAction(number);
+              const groupBoundary =
+                groupSize && groupSize > 0 && number > 1 && (number - 1) % groupSize === 0;
               return (
                 <Cell
                   key={number}
                   number={number}
                   state={cell}
-                  isHighlight={number === highlightTop}
+                  isNext={number === nextCell}
+                  action={action}
+                  isGroupBoundary={Boolean(groupBoundary)}
+                  onClick={() => action && onCellClick(number)}
                 />
               );
             })}
@@ -44,15 +59,20 @@ export function Tower({ cells, highlightTop }: TowerProps) {
 interface CellProps {
   number: number;
   state: CellState;
-  isHighlight: boolean;
+  isNext: boolean;
+  action: ClickAction | null;
+  isGroupBoundary: boolean;
+  onClick: () => void;
 }
 
-function Cell({ number, state, isHighlight }: CellProps) {
+function Cell({ number, state, isNext, action, isGroupBoundary, onClick }: CellProps) {
   const color = colorForNumber(number);
   const className = [
     'tower-cell',
     `tower-cell--${state.kind}`,
-    isHighlight ? 'tower-cell--highlight' : '',
+    isNext ? `tower-cell--next-${action ?? 'none'}` : '',
+    action ? 'tower-cell--clickable' : '',
+    isGroupBoundary ? 'tower-cell--group-boundary' : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -65,13 +85,16 @@ function Cell({ number, state, isHighlight }: CellProps) {
   }
 
   return (
-    <div className={className} style={style} title={String(number)}>
+    <button
+      type="button"
+      className={className}
+      style={style}
+      onClick={onClick}
+      disabled={!action}
+      aria-label={`Stufe ${number}`}
+      tabIndex={action ? 0 : -1}
+    >
       <span className="tower-cell-num">{number}</span>
-    </div>
+    </button>
   );
-}
-
-// kleiner sanity-check, falls jemand TOWER_SIZE manipuliert
-if (TOWER_SIZE !== 100 && typeof console !== 'undefined') {
-  console.warn('Tower erwartet TOWER_SIZE === 100');
 }
