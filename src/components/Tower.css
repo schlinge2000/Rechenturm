@@ -1,0 +1,138 @@
+.tower {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 14px 0 14px;
+  background: linear-gradient(180deg, #e0f2fe 0%, #f8fafc 70%, #fef3c7 100%);
+  border-radius: 14px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+  user-select: none;
+}
+
+.tower-floor {
+  display: grid;
+  grid-template-columns: 60px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+
+.tower-floor-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  padding-right: 4px;
+}
+
+.tower-floor-cells {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+
+.tower-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 6px;
+  background: #e2e8f0;
+  border: 2px solid transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  color: rgba(15, 23, 42, 0.35);
+  transition:
+    background-color 250ms ease,
+    transform 250ms ease,
+    box-shadow 250ms ease,
+    opacity 250ms ease,
+    border-color 250ms ease;
+}
+
+.tower-cell-num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.tower-cell--empty {
+  background: #e2e8f0;
+}
+
+.tower-cell--base {
+  color: rgba(15, 23, 42, 0.85);
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.18);
+}
+
+.tower-cell--added {
+  color: #fff;
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.6),
+    0 4px 14px rgba(0, 0, 0, 0.18);
+  animation: pop-in 350ms ease both;
+}
+
+.tower-cell--removed {
+  background: repeating-linear-gradient(
+    45deg,
+    #f1f5f9,
+    #f1f5f9 4px,
+    #e2e8f0 4px,
+    #e2e8f0 8px
+  );
+  border-width: 2px;
+  border-style: dashed;
+  color: rgba(15, 23, 42, 0.4);
+  opacity: 0.85;
+}
+
+.tower-cell--removed .tower-cell-num {
+  text-decoration: line-through;
+}
+
+.tower-cell--highlight {
+  transform: scale(1.18);
+  box-shadow:
+    0 0 0 3px #fff,
+    0 0 0 6px #1e293b,
+    0 6px 18px rgba(0, 0, 0, 0.25);
+  z-index: 1;
+}
+
+.tower-ground {
+  height: 14px;
+  margin: 6px -14px 0 -14px;
+  background: linear-gradient(180deg, #92400e 0%, #78350f 100%);
+  border-radius: 0 0 14px 14px;
+  box-shadow: inset 0 4px 0 rgba(255, 255, 255, 0.08);
+}
+
+@keyframes pop-in {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Responsive: kleinere Stufen-Nummern auf schmalen Displays */
+@media (max-width: 720px) {
+  .tower-floor {
+    grid-template-columns: 44px 1fr;
+    gap: 6px;
+  }
+  .tower-floor-label {
+    font-size: 0.65rem;
+  }
+  .tower-cell {
+    font-size: 0.55rem;
+    border-radius: 4px;
+  }
+}
