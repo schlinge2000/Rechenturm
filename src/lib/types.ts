@@ -9,10 +9,10 @@ export interface Problem {
   result: number;
 }
 
-export type Phase = 'asking' | 'revealed';
-
 export type CellState =
   | { kind: 'empty' }
   | { kind: 'base' }
   | { kind: 'added' }
   | { kind: 'removed' };
+
+export type ClickAction = 'add' | 'remove';
