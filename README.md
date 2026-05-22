@@ -2,6 +2,8 @@
 
 Mathematik zum Anschauen für Grundschüler.
 
+**Live:** https://rechenturm.netlify.app/
+
 Plus-, Minus- und Mal-Aufgaben (Zahlenraum 0–100) werden auf einem Turm mit
 10 Etagen à 10 Stufen visualisiert. Jede Einerstelle bekommt eine feste Farbe
 — wer +10 rechnet, landet eine Etage höher auf derselben Farbe.
