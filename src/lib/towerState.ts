@@ -1,4 +1,4 @@
-import type { CellState, ClickAction, Problem } from './types';
+import type { CellState, ClickAction, NextRange, Problem } from './types';
 
 export const TOWER_SIZE = 100;
 
@@ -6,7 +6,11 @@ function fill<T>(n: number, v: T): T[] {
   return Array.from({ length: n }, () => v);
 }
 
-// Wo das Kind startet (welche Zellen bereits gefüllt sind).
+// Wieviel Zellen pro "Schritt"? Für Mal ist das eine ganze Gruppe.
+export function stepSize(p: Problem): number {
+  return p.operation === 'mal' ? p.a : 1;
+}
+
 export function initialCount(p: Problem): number {
   switch (p.operation) {
     case 'plus':
@@ -18,14 +22,11 @@ export function initialCount(p: Problem): number {
   }
 }
 
-// Grenzen, innerhalb derer currentCount sich bewegen darf.
 export function bounds(p: Problem): { min: number; max: number } {
   switch (p.operation) {
     case 'plus':
-      // Basis (a) darf nicht abgebaut werden, oben Deckel bei 100
       return { min: p.a, max: TOWER_SIZE };
     case 'minus':
-      // Startwert a ist Maximum, runter bis 0
       return { min: 0, max: p.a };
     case 'mal':
       return { min: 0, max: TOWER_SIZE };
@@ -50,7 +51,7 @@ export function computeCellStates(p: Problem, currentCount: number): CellState[]
     return cells;
   }
 
-  // mal — abwechselnde Gruppen-Farben, damit Wiederholungen sichtbar sind
+  // mal — abwechselnde Gruppen, damit jeder gleiche Block sichtbar wird
   for (let i = 0; i < currentCount && i < TOWER_SIZE; i++) {
     const groupIndex = Math.floor(i / Math.max(p.a, 1));
     cells[i] = groupIndex % 2 === 0 ? { kind: 'base' } : { kind: 'added' };
@@ -58,33 +59,67 @@ export function computeCellStates(p: Problem, currentCount: number): CellState[]
   return cells;
 }
 
-// Welche Aktion löst ein Klick auf Zelle n aus (n ist 1-basiert)?
 export function clickAction(
   p: Problem,
   currentCount: number,
   n: number,
 ): ClickAction | null {
   const { min, max } = bounds(p);
+  const step = stepSize(p);
 
   if (p.operation === 'minus') {
-    // Topmost-vorhandene Zelle abräumen, oder die direkt darüber liegende
-    // (zuletzt entfernte) wieder zurücklegen.
     if (n === currentCount && currentCount > min) return 'remove';
     if (n === currentCount + 1 && currentCount < max) return 'add';
     return null;
   }
 
-  // plus & mal — nächste leere Zelle füllen, oder Topmost zurücknehmen.
+  if (p.operation === 'mal') {
+    // Klick irgendwo in die nächste Gruppe → die ganze Gruppe legen.
+    if (
+      n >= currentCount + 1 &&
+      n <= currentCount + step &&
+      currentCount + step <= max
+    ) {
+      return 'add';
+    }
+    // Klick auf einen Stein in der zuletzt gelegten Gruppe → wegnehmen.
+    if (n >= currentCount - step + 1 && n <= currentCount && currentCount > min) {
+      return 'remove';
+    }
+    return null;
+  }
+
+  // plus
   if (n === currentCount + 1 && currentCount < max) return 'add';
   if (n === currentCount && currentCount > min) return 'remove';
   return null;
 }
 
-// Welche Zelle ist die "primäre" Aktion (was leuchtet als Hinweis)?
-export function nextActionCell(p: Problem, currentCount: number): number | null {
+export function nextRange(p: Problem, currentCount: number): NextRange | null {
   const { min, max } = bounds(p);
+  const step = stepSize(p);
+
   if (p.operation === 'minus') {
-    return currentCount > min ? currentCount : null;
+    if (currentCount > min) {
+      return { from: currentCount, to: currentCount, action: 'remove' };
+    }
+    return null;
   }
-  return currentCount < max ? currentCount + 1 : null;
+
+  if (p.operation === 'mal') {
+    if (currentCount + step <= max) {
+      return {
+        from: currentCount + 1,
+        to: currentCount + step,
+        action: 'add',
+      };
+    }
+    return null;
+  }
+
+  // plus
+  if (currentCount < max) {
+    return { from: currentCount + 1, to: currentCount + 1, action: 'add' };
+  }
+  return null;
 }

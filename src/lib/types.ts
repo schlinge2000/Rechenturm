@@ -16,3 +16,11 @@ export type CellState =
   | { kind: 'removed' };
 
 export type ClickAction = 'add' | 'remove';
+
+// Range von Zellen, die als nächstes geklickt werden können.
+// from/to sind 1-basierte Zellnummern, beide inklusiv.
+export interface NextRange {
+  from: number;
+  to: number;
+  action: ClickAction;
+}

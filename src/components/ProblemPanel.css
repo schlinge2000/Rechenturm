@@ -70,6 +70,10 @@
   gap: 8px;
 }
 
+.step-buttons--two {
+  grid-template-columns: repeat(2, 1fr);
+}
+
 .step {
   padding: 12px 8px;
   font-size: 1.05rem;

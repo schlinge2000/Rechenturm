@@ -32,13 +32,6 @@ export function ProblemPanel({
   const symbol =
     problem.operation === 'plus' ? '+' : problem.operation === 'minus' ? '−' : '×';
 
-  const isMinus = problem.operation === 'minus';
-  // Für Minus drehen sich die Hilfsbuttons um: −1/−10 ist der "Vorwärts"-Schritt.
-  const primarySign = isMinus ? -1 : 1;
-  const primaryLabel = isMinus ? '−' : '+';
-  const undoSign = isMinus ? 1 : -1;
-  const undoLabel = isMinus ? '+' : '−';
-
   return (
     <div className="problem-panel">
       <div className="problem-equation" aria-live="polite">
@@ -58,40 +51,7 @@ export function ProblemPanel({
         </span>
       </div>
 
-      <div className="step-buttons" role="group" aria-label="Schritt-Buttons">
-        <button
-          type="button"
-          className="step step--undo"
-          onClick={() => onStep(undoSign * 10)}
-          disabled={isMinus ? !canIncrease : !canDecrease}
-        >
-          {undoLabel}10
-        </button>
-        <button
-          type="button"
-          className="step step--undo"
-          onClick={() => onStep(undoSign * 1)}
-          disabled={isMinus ? !canIncrease : !canDecrease}
-        >
-          {undoLabel}1
-        </button>
-        <button
-          type="button"
-          className="step step--primary"
-          onClick={() => onStep(primarySign * 1)}
-          disabled={isMinus ? !canDecrease : !canIncrease}
-        >
-          {primaryLabel}1
-        </button>
-        <button
-          type="button"
-          className="step step--primary"
-          onClick={() => onStep(primarySign * 10)}
-          disabled={isMinus ? !canDecrease : !canIncrease}
-        >
-          {primaryLabel}10
-        </button>
-      </div>
+      {renderStepButtons(problem, onStep, canIncrease, canDecrease)}
 
       <p className="hint">
         {problem.operation === 'plus' && (
@@ -101,7 +61,7 @@ export function ProblemPanel({
           <>Tippe auf den obersten Stein — nimm <strong>{problem.b}</strong> Steine weg.</>
         )}
         {problem.operation === 'mal' && (
-          <>Lege <strong>{problem.b}</strong> Gruppen mit je <strong>{problem.a}</strong> Steinen.</>
+          <>Stapele <strong>{problem.b}</strong> Blöcke à <strong>{problem.a}</strong> Steinen — ein Tipp = ein Block.</>
         )}
       </p>
 
@@ -125,6 +85,85 @@ export function ProblemPanel({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+function renderStepButtons(
+  problem: Problem,
+  onStep: (delta: number) => void,
+  canIncrease: boolean,
+  canDecrease: boolean,
+) {
+  const isMinus = problem.operation === 'minus';
+  const isMal = problem.operation === 'mal';
+
+  if (isMal) {
+    const step = problem.a;
+    return (
+      <div className="step-buttons step-buttons--two" role="group" aria-label="Block-Buttons">
+        <button
+          type="button"
+          className="step step--undo"
+          onClick={() => onStep(-step)}
+          disabled={!canDecrease}
+        >
+          − Block
+        </button>
+        <button
+          type="button"
+          className="step step--primary"
+          onClick={() => onStep(step)}
+          disabled={!canIncrease}
+        >
+          + Block
+        </button>
+      </div>
+    );
+  }
+
+  // Plus / Minus — vier Buttons, primär ist die Vorwärts-Richtung
+  const primarySign = isMinus ? -1 : 1;
+  const primaryLabel = isMinus ? '−' : '+';
+  const undoSign = isMinus ? 1 : -1;
+  const undoLabel = isMinus ? '+' : '−';
+  const forwardEnabled = isMinus ? canDecrease : canIncrease;
+  const undoEnabled = isMinus ? canIncrease : canDecrease;
+
+  return (
+    <div className="step-buttons" role="group" aria-label="Schritt-Buttons">
+      <button
+        type="button"
+        className="step step--undo"
+        onClick={() => onStep(undoSign * 10)}
+        disabled={!undoEnabled}
+      >
+        {undoLabel}10
+      </button>
+      <button
+        type="button"
+        className="step step--undo"
+        onClick={() => onStep(undoSign * 1)}
+        disabled={!undoEnabled}
+      >
+        {undoLabel}1
+      </button>
+      <button
+        type="button"
+        className="step step--primary"
+        onClick={() => onStep(primarySign * 1)}
+        disabled={!forwardEnabled}
+      >
+        {primaryLabel}1
+      </button>
+      <button
+        type="button"
+        className="step step--primary"
+        onClick={() => onStep(primarySign * 10)}
+        disabled={!forwardEnabled}
+      >
+        {primaryLabel}10
+      </button>
     </div>
   );
 }
