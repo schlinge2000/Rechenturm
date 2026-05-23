@@ -11,8 +11,9 @@ import {
   bounds,
   clickAction,
   computeCellStates,
+  cursorRange,
   initialCount,
-  nextRange,
+  nextTargetRange,
   stepSize,
 } from './lib/towerState';
 import { colorForBlock, colorForDecade } from './lib/colors';
@@ -71,8 +72,12 @@ export default function App() {
     () => computeCellStates(problem, currentCount),
     [problem, currentCount],
   );
-  const nextR = useMemo(
-    () => (solvedVia ? null : nextRange(problem, currentCount)),
+  const cursorR = useMemo(
+    () => (solvedVia ? null : cursorRange(problem, currentCount)),
+    [problem, currentCount, solvedVia],
+  );
+  const targetR = useMemo(
+    () => (solvedVia ? null : nextTargetRange(problem, currentCount)),
     [problem, currentCount, solvedVia],
   );
   const solved = solvedVia !== null;
@@ -256,7 +261,8 @@ export default function App() {
         <div className="app-tower-col">
           <Tower
             cells={cells}
-            nextRange={nextR}
+            cursorRange={cursorR}
+            targetRange={targetR}
             groupSize={groupSize}
             staircase={staircaseActive}
             colorFor={colorFor}
