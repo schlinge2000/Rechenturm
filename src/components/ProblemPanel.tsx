@@ -6,7 +6,9 @@ interface ProblemPanelProps {
   problem: Problem;
   currentCount: number;
   solved: boolean;
+  attemptFeedback: 'wrong' | null;
   onStep: (delta: number) => void;
+  onConfirm: () => void;
   onReveal: () => void;
   onNext: () => void;
   canIncrease: boolean;
@@ -17,7 +19,9 @@ export function ProblemPanel({
   problem,
   currentCount,
   solved,
+  attemptFeedback,
   onStep,
+  onConfirm,
   onReveal,
   onNext,
   canIncrease,
@@ -51,7 +55,7 @@ export function ProblemPanel({
         </span>
       </div>
 
-      {renderStepButtons(problem, onStep, canIncrease, canDecrease)}
+      {renderStepButtons(problem, onStep, canIncrease, canDecrease, solved)}
 
       <p className="hint">
         {problem.operation === 'plus' && (
@@ -67,6 +71,9 @@ export function ProblemPanel({
 
       <div className="problem-feedback" aria-live="polite">
         {solved && <span className="feedback feedback--correct">Richtig! 🎉</span>}
+        {!solved && attemptFeedback === 'wrong' && (
+          <span className="feedback feedback--wrong">Noch nicht ganz — schau nochmal nach.</span>
+        )}
       </div>
 
       <div className="problem-actions">
@@ -80,9 +87,22 @@ export function ProblemPanel({
             Nächste Aufgabe →
           </button>
         ) : (
-          <button type="button" className="action action--ghost" onClick={onReveal}>
-            Lösung zeigen
-          </button>
+          <>
+            <button
+              type="button"
+              className="action action--primary"
+              onClick={onConfirm}
+            >
+              ✓ Fertig
+            </button>
+            <button
+              type="button"
+              className="action action--ghost"
+              onClick={onReveal}
+            >
+              Lösung zeigen
+            </button>
+          </>
         )}
       </div>
     </div>
@@ -94,6 +114,7 @@ function renderStepButtons(
   onStep: (delta: number) => void,
   canIncrease: boolean,
   canDecrease: boolean,
+  solved: boolean,
 ) {
   const isMinus = problem.operation === 'minus';
   const isMal = problem.operation === 'mal';
@@ -106,7 +127,7 @@ function renderStepButtons(
           type="button"
           className="step step--undo"
           onClick={() => onStep(-step)}
-          disabled={!canDecrease}
+          disabled={solved || !canDecrease}
         >
           − Block
         </button>
@@ -114,7 +135,7 @@ function renderStepButtons(
           type="button"
           className="step step--primary"
           onClick={() => onStep(step)}
-          disabled={!canIncrease}
+          disabled={solved || !canIncrease}
         >
           + Block
         </button>
@@ -122,7 +143,6 @@ function renderStepButtons(
     );
   }
 
-  // Plus / Minus — vier Buttons, primär ist die Vorwärts-Richtung
   const primarySign = isMinus ? -1 : 1;
   const primaryLabel = isMinus ? '−' : '+';
   const undoSign = isMinus ? 1 : -1;
@@ -136,7 +156,7 @@ function renderStepButtons(
         type="button"
         className="step step--undo"
         onClick={() => onStep(undoSign * 10)}
-        disabled={!undoEnabled}
+        disabled={solved || !undoEnabled}
       >
         {undoLabel}10
       </button>
@@ -144,7 +164,7 @@ function renderStepButtons(
         type="button"
         className="step step--undo"
         onClick={() => onStep(undoSign * 1)}
-        disabled={!undoEnabled}
+        disabled={solved || !undoEnabled}
       >
         {undoLabel}1
       </button>
@@ -152,7 +172,7 @@ function renderStepButtons(
         type="button"
         className="step step--primary"
         onClick={() => onStep(primarySign * 1)}
-        disabled={!forwardEnabled}
+        disabled={solved || !forwardEnabled}
       >
         {primaryLabel}1
       </button>
@@ -160,7 +180,7 @@ function renderStepButtons(
         type="button"
         className="step step--primary"
         onClick={() => onStep(primarySign * 10)}
-        disabled={!forwardEnabled}
+        disabled={solved || !forwardEnabled}
       >
         {primaryLabel}10
       </button>
