@@ -15,6 +15,7 @@ import {
   nextRange,
   stepSize,
 } from './lib/towerState';
+import { colorForBlock, colorForDecade } from './lib/colors';
 import {
   loadGameState,
   MEDAL_INTERVAL,
@@ -41,14 +42,15 @@ export default function App() {
   const [problem, setProblem] = useState<Problem>(() => generateProblem('plus'));
   const [currentCount, setCurrentCount] = useState<number>(() => initialCount(problem));
   const [solvedVia, setSolvedVia] = useState<SolvedVia>(null);
+  const [attemptFeedback, setAttemptFeedback] = useState<'wrong' | null>(null);
   const [game, setGame] = useState<GameState>(() => loadGameState());
   const [profile, setProfile] = useState<Profile | null>(() => loadProfile());
   const [showCustom, setShowCustom] = useState(false);
   const [justEarnedMedal, setJustEarnedMedal] = useState(false);
 
   const medalTimerRef = useRef<number | null>(null);
+  const wrongTimerRef = useRef<number | null>(null);
 
-  // Persistenz: Game-State und Profil synchron halten
   useEffect(() => {
     saveGameState(game);
   }, [game]);
@@ -56,6 +58,13 @@ export default function App() {
   useEffect(() => {
     if (profile) saveProfile(profile);
   }, [profile]);
+
+  useEffect(() => {
+    return () => {
+      if (medalTimerRef.current !== null) window.clearTimeout(medalTimerRef.current);
+      if (wrongTimerRef.current !== null) window.clearTimeout(wrongTimerRef.current);
+    };
+  }, []);
 
   const { min, max } = useMemo(() => bounds(problem), [problem]);
   const cells = useMemo(
@@ -68,42 +77,22 @@ export default function App() {
   );
   const solved = solvedVia !== null;
 
-  // Auto-Erkennung: Treffer durch eigenes Tippen
-  useEffect(() => {
-    if (solvedVia !== null) return;
-    if (currentCount !== problem.result) return;
-
-    setSolvedVia('won');
-    setGame((g) => {
-      const newSolved = g.solved + 1;
-      const newMedals = Math.floor(newSolved / MEDAL_INTERVAL);
-      const earned = newMedals > g.medals;
-      if (earned) {
-        setJustEarnedMedal(true);
-        if (medalTimerRef.current !== null) {
-          window.clearTimeout(medalTimerRef.current);
-        }
-        medalTimerRef.current = window.setTimeout(() => {
-          setJustEarnedMedal(false);
-          medalTimerRef.current = null;
-        }, 2500);
-      }
-      return { ...g, solved: newSolved, medals: newMedals };
-    });
-  }, [currentCount, problem.result, solvedVia]);
-
-  useEffect(() => {
-    return () => {
-      if (medalTimerRef.current !== null) {
-        window.clearTimeout(medalTimerRef.current);
-      }
-    };
-  }, []);
+  const colorFor = useMemo(() => {
+    if (problem.operation === 'mal') {
+      return (n: number) => colorForBlock(n, problem.a);
+    }
+    return colorForDecade;
+  }, [problem.operation, problem.a]);
 
   function loadProblem(next: Problem) {
     setProblem(next);
     setCurrentCount(initialCount(next));
     setSolvedVia(null);
+    setAttemptFeedback(null);
+    if (wrongTimerRef.current !== null) {
+      window.clearTimeout(wrongTimerRef.current);
+      wrongTimerRef.current = null;
+    }
   }
 
   function handleModeChange(next: Mode) {
@@ -119,11 +108,44 @@ export default function App() {
   function handleReveal() {
     setSolvedVia('revealed');
     setCurrentCount(problem.result);
+    setAttemptFeedback(null);
+  }
+
+  function handleConfirm() {
+    if (solved) return;
+    if (currentCount === problem.result) {
+      setSolvedVia('won');
+      setAttemptFeedback(null);
+      const newSolved = game.solved + 1;
+      const newMedals = Math.floor(newSolved / MEDAL_INTERVAL);
+      const earned = newMedals > game.medals;
+      setGame({ ...game, solved: newSolved, medals: newMedals });
+      if (earned) {
+        setJustEarnedMedal(true);
+        if (medalTimerRef.current !== null) {
+          window.clearTimeout(medalTimerRef.current);
+        }
+        medalTimerRef.current = window.setTimeout(() => {
+          setJustEarnedMedal(false);
+          medalTimerRef.current = null;
+        }, 2500);
+      }
+    } else {
+      setAttemptFeedback('wrong');
+      if (wrongTimerRef.current !== null) {
+        window.clearTimeout(wrongTimerRef.current);
+      }
+      wrongTimerRef.current = window.setTimeout(() => {
+        setAttemptFeedback(null);
+        wrongTimerRef.current = null;
+      }, 2500);
+    }
   }
 
   function handleStep(delta: number) {
     if (solved) return;
     setCurrentCount((c) => clamp(c + delta, min, max));
+    setAttemptFeedback(null);
   }
 
   function handleCellClick(n: number) {
@@ -132,6 +154,7 @@ export default function App() {
     const step = stepSize(problem);
     if (action === 'add') setCurrentCount((c) => clamp(c + step, min, max));
     if (action === 'remove') setCurrentCount((c) => clamp(c - step, min, max));
+    setAttemptFeedback(null);
   }
 
   function getAction(n: number) {
@@ -172,6 +195,12 @@ export default function App() {
   const canIncrease = !solved && currentCount < max;
   const canDecrease = !solved && currentCount > min;
   const groupSize = problem.operation === 'mal' ? problem.a : undefined;
+  // Treppe macht im Mal-Modus optisch keinen Sinn — Blöcke würden über
+  // Reihengrenzen hinweg zerrissen wirken.
+  const showStaircaseToggle = problem.operation !== 'mal';
+  const staircaseActive = game.staircase && showStaircaseToggle;
+  const legendVariant: 'decade' | 'block' =
+    problem.operation === 'mal' ? 'block' : 'decade';
 
   return (
     <div className="app">
@@ -194,15 +223,17 @@ export default function App() {
       <section className="app-controls">
         <ModeSelector mode={mode} onChange={handleModeChange} />
         <div className="app-controls-right">
-          <button
-            type="button"
-            className={`toggle-button ${game.staircase ? 'toggle-button--active' : ''}`}
-            onClick={handleStaircaseToggle}
-            aria-pressed={game.staircase}
-            title="Stufen innerhalb einer Etage als Treppe anzeigen"
-          >
-            🪜 Treppe
-          </button>
+          {showStaircaseToggle && (
+            <button
+              type="button"
+              className={`toggle-button ${game.staircase ? 'toggle-button--active' : ''}`}
+              onClick={handleStaircaseToggle}
+              aria-pressed={game.staircase}
+              title="Stufen innerhalb einer Etage als Treppe anzeigen"
+            >
+              🪜 Treppe
+            </button>
+          )}
           <button
             type="button"
             className="toggle-button"
@@ -227,7 +258,8 @@ export default function App() {
             cells={cells}
             nextRange={nextR}
             groupSize={groupSize}
-            staircase={game.staircase}
+            staircase={staircaseActive}
+            colorFor={colorFor}
             onCellClick={handleCellClick}
             getAction={getAction}
             disabled={solved}
@@ -243,13 +275,15 @@ export default function App() {
             problem={problem}
             currentCount={currentCount}
             solved={solved}
+            attemptFeedback={attemptFeedback}
             onStep={handleStep}
+            onConfirm={handleConfirm}
             onReveal={handleReveal}
             onNext={handleNext}
             canIncrease={canIncrease}
             canDecrease={canDecrease}
           />
-          <Legend />
+          <Legend variant={legendVariant} />
         </aside>
       </main>
 
@@ -266,7 +300,11 @@ export default function App() {
       )}
 
       <footer className="app-footer">
-        <span>Tipp: +10 = eine Etage höher, gleiche Farbe!</span>
+        <span>
+          {problem.operation === 'mal'
+            ? 'Tipp: Jeder Block hat seine eigene Farbe — leichter zum Zählen.'
+            : 'Tipp: Jede Etage hat ihre Farbe — links hell, rechts kräftig.'}
+        </span>
         {game.solved > 0 && (
           <button
             type="button"

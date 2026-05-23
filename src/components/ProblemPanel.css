@@ -154,6 +154,18 @@
   animation: pop 400ms ease;
 }
 
+.feedback--wrong {
+  background: #fee2e2;
+  color: #991b1b;
+  animation: shake 350ms ease;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-5px); }
+  40%, 80% { transform: translateX(5px); }
+}
+
 .problem-actions {
   display: flex;
   justify-content: center;

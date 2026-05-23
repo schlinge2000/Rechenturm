@@ -1,12 +1,13 @@
-import { colorForNumber } from '../lib/colors';
+import type { CellColor } from '../lib/colors';
 import type { CellState, ClickAction, NextRange } from '../lib/types';
 import './Tower.css';
 
 interface TowerProps {
   cells: CellState[];
   nextRange: NextRange | null;
-  groupSize?: number; // optische Gruppengrenzen für Mal
+  groupSize?: number;
   staircase: boolean;
+  colorFor: (n: number) => CellColor;
   onCellClick: (n: number) => void;
   getAction: (n: number) => ClickAction | null;
   disabled?: boolean;
@@ -17,6 +18,7 @@ export function Tower({
   nextRange,
   groupSize,
   staircase,
+  colorFor,
   onCellClick,
   getAction,
   disabled,
@@ -60,6 +62,7 @@ export function Tower({
                       number={number}
                       step={step}
                       state={cell}
+                      color={colorFor(number)}
                       isNext={inNext}
                       nextAction={inNext && nextRange ? nextRange.action : null}
                       action={action}
@@ -85,6 +88,7 @@ interface CellProps {
   number: number;
   step: number;
   state: CellState;
+  color: CellColor;
   isNext: boolean;
   nextAction: ClickAction | null;
   action: ClickAction | null;
@@ -96,13 +100,13 @@ function Cell({
   number,
   step,
   state,
+  color,
   isNext,
   nextAction,
   action,
   isGroupBoundary,
   onClick,
 }: CellProps) {
-  const color = colorForNumber(number);
   const className = [
     'tower-cell',
     `tower-cell--${state.kind}`,
@@ -114,13 +118,13 @@ function Cell({
     .join(' ');
 
   const style: React.CSSProperties = {
-    // Treppen-Versatz: jede Stufe innerhalb der Etage einen Tick höher
     ['--step' as never]: step,
   };
   if (state.kind === 'base' || state.kind === 'added') {
-    style.backgroundColor = color;
+    style.backgroundColor = color.bg;
+    style.color = color.fg;
   } else if (state.kind === 'removed') {
-    style.borderColor = color;
+    style.borderColor = color.bg;
   }
 
   return (
