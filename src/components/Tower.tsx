@@ -4,7 +4,8 @@ import './Tower.css';
 
 interface TowerProps {
   cells: CellState[];
-  nextRange: NextRange | null;
+  cursorRange: NextRange | null;
+  targetRange: NextRange | null;
   groupSize?: number;
   staircase: boolean;
   colorFor: (n: number) => CellColor;
@@ -13,9 +14,14 @@ interface TowerProps {
   disabled?: boolean;
 }
 
+function inRange(n: number, r: NextRange | null): boolean {
+  return r !== null && n >= r.from && n <= r.to;
+}
+
 export function Tower({
   cells,
-  nextRange,
+  cursorRange,
+  targetRange,
   groupSize,
   staircase,
   colorFor,
@@ -47,10 +53,8 @@ export function Tower({
                   const number = floor * 10 + step + 1;
                   const cell = cells[number - 1] ?? { kind: 'empty' };
                   const action = disabled ? null : getAction(number);
-                  const inNext =
-                    nextRange !== null &&
-                    number >= nextRange.from &&
-                    number <= nextRange.to;
+                  const isCursor = inRange(number, cursorRange);
+                  const isTarget = !isCursor && inRange(number, targetRange);
                   const groupBoundary =
                     groupSize &&
                     groupSize > 0 &&
@@ -63,8 +67,10 @@ export function Tower({
                       step={step}
                       state={cell}
                       color={colorFor(number)}
-                      isNext={inNext}
-                      nextAction={inNext && nextRange ? nextRange.action : null}
+                      isCursor={isCursor}
+                      cursorAction={isCursor && cursorRange ? cursorRange.action : null}
+                      isTarget={isTarget}
+                      targetAction={isTarget && targetRange ? targetRange.action : null}
                       action={action}
                       isGroupBoundary={Boolean(groupBoundary)}
                       onClick={() => action && onCellClick(number)}
@@ -89,8 +95,10 @@ interface CellProps {
   step: number;
   state: CellState;
   color: CellColor;
-  isNext: boolean;
-  nextAction: ClickAction | null;
+  isCursor: boolean;
+  cursorAction: ClickAction | null;
+  isTarget: boolean;
+  targetAction: ClickAction | null;
   action: ClickAction | null;
   isGroupBoundary: boolean;
   onClick: () => void;
@@ -101,8 +109,10 @@ function Cell({
   step,
   state,
   color,
-  isNext,
-  nextAction,
+  isCursor,
+  cursorAction,
+  isTarget,
+  targetAction,
   action,
   isGroupBoundary,
   onClick,
@@ -110,7 +120,8 @@ function Cell({
   const className = [
     'tower-cell',
     `tower-cell--${state.kind}`,
-    isNext ? `tower-cell--next-${nextAction ?? 'none'}` : '',
+    isCursor ? `tower-cell--cursor-${cursorAction ?? 'add'}` : '',
+    isTarget ? `tower-cell--target-${targetAction ?? 'add'}` : '',
     action ? 'tower-cell--clickable' : '',
     isGroupBoundary ? 'tower-cell--group-boundary' : '',
   ]

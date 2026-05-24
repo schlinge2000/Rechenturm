@@ -6,7 +6,6 @@ function fill<T>(n: number, v: T): T[] {
   return Array.from({ length: n }, () => v);
 }
 
-// Wieviel Zellen pro "Schritt"? Für Mal ist das eine ganze Gruppe.
 export function stepSize(p: Problem): number {
   return p.operation === 'mal' ? p.a : 1;
 }
@@ -74,7 +73,6 @@ export function clickAction(
   }
 
   if (p.operation === 'mal') {
-    // Klick irgendwo in die nächste Gruppe → die ganze Gruppe legen.
     if (
       n >= currentCount + 1 &&
       n <= currentCount + step &&
@@ -82,7 +80,6 @@ export function clickAction(
     ) {
       return 'add';
     }
-    // Klick auf einen Stein in der zuletzt gelegten Gruppe → wegnehmen.
     if (n >= currentCount - step + 1 && n <= currentCount && currentCount > min) {
       return 'remove';
     }
@@ -95,31 +92,35 @@ export function clickAction(
   return null;
 }
 
-export function nextRange(p: Problem, currentCount: number): NextRange | null {
-  const { min, max } = bounds(p);
-  const step = stepSize(p);
-
-  if (p.operation === 'minus') {
-    if (currentCount > min) {
-      return { from: currentCount, to: currentCount, action: 'remove' };
-    }
-    return null;
-  }
+// Cursor markiert die aktuelle Position auf dem Turm — den obersten
+// gelegten Stein (bzw. den zuletzt gelegten Block bei Mal).
+export function cursorRange(p: Problem, currentCount: number): NextRange | null {
+  if (currentCount <= 0) return null;
 
   if (p.operation === 'mal') {
-    if (currentCount + step <= max) {
-      return {
-        from: currentCount + 1,
-        to: currentCount + step,
-        action: 'add',
-      };
-    }
-    return null;
+    const from = Math.max(1, currentCount - p.a + 1);
+    return { from, to: currentCount, action: 'add' };
   }
+  return {
+    from: currentCount,
+    to: currentCount,
+    action: p.operation === 'minus' ? 'remove' : 'add',
+  };
+}
 
-  // plus
-  if (currentCount < max) {
-    return { from: currentCount + 1, to: currentCount + 1, action: 'add' };
-  }
-  return null;
+// Wo der nächste Stein/Block hinzugefügt werden würde — nur für
+// Plus/Mal sichtbar, damit das Kind das nächste Tipp-Ziel sieht.
+export function nextTargetRange(
+  p: Problem,
+  currentCount: number,
+): NextRange | null {
+  if (p.operation === 'minus') return null;
+  const { max } = bounds(p);
+  const step = stepSize(p);
+  if (currentCount + step > max) return null;
+  return {
+    from: currentCount + 1,
+    to: currentCount + step,
+    action: 'add',
+  };
 }
