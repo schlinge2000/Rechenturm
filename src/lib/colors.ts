@@ -71,7 +71,7 @@ function textColorForHex(hex: string): string {
   return luminance > 155 ? '#1e293b' : '#ffffff';
 }
 
-// Helle Variante (für Legenden-Vorschau einer Schattierung)
+// Schattierung einer Etagen-Farbe je nach Einer-Stufe
 export function shadeForStep(hex: string, step: number): string {
   // step 0..9: 0 = hellste Schattierung (54% weiß), 9 = volle Farbe
   const factor = ((9 - step) * 0.06);
