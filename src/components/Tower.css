@@ -110,6 +110,7 @@
 
 .tower-floor-label {
   font-size: 0.7rem;
+  white-space: nowrap;
   color: #78350f;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -363,7 +364,7 @@
     --step-rise: 3px;
   }
   .tower-floor {
-    grid-template-columns: 40px 1fr;
+    grid-template-columns: 44px 1fr;
     gap: 6px;
   }
   .tower-floor-label {

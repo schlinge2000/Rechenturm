@@ -17,13 +17,14 @@
 }
 
 .app-header-title {
-  flex: 1;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .app-header h1 {
   font-size: clamp(1.6rem, 3vw, 2.2rem);
   margin: 0;
+  white-space: nowrap;
   color: #0f172a;
   letter-spacing: -0.01em;
 }
@@ -213,5 +214,19 @@
   }
   .app-side-col {
     position: static;
+  }
+}
+
+@media (max-width: 640px) {
+  .app {
+    padding: 16px 16px 32px;
+    gap: 16px;
+  }
+  .app-header {
+    align-items: center;
+    row-gap: 10px;
+  }
+  .app-subtitle {
+    display: none;
   }
 }
