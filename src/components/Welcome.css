@@ -1,0 +1,129 @@
+.welcome-card {
+  gap: 14px;
+}
+
+.welcome-title {
+  margin: 0;
+  font-size: clamp(1.6rem, 6vw, 2.2rem);
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.welcome-solved {
+  display: inline-block;
+  margin-left: 2px;
+  font-size: 0.55em;
+  font-weight: 800;
+  line-height: 0;
+  color: #b45309;
+  font-variant-numeric: tabular-nums;
+}
+
+.welcome-modes {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.welcome-mode {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 16px 8px;
+  font: inherit;
+  color: #1e293b;
+  background: #f8fafc;
+  border: 2px solid #cbd5e1;
+  border-radius: 16px;
+  cursor: pointer;
+  transition:
+    transform 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease,
+    box-shadow 120ms ease;
+}
+
+.welcome-mode:hover {
+  border-color: #1e293b;
+  background: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
+}
+
+.welcome-mode:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.welcome-mode--last {
+  border-color: #1e293b;
+}
+
+.welcome-mode-symbol {
+  font-size: 2.2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.welcome-mode-label {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.welcome-custom {
+  width: 100%;
+  padding: 12px 14px;
+  font: inherit;
+  font-weight: 600;
+  color: #475569;
+  background: #fff;
+  border: 2px dashed #94a3b8;
+  border-radius: 14px;
+  cursor: pointer;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.welcome-custom:hover {
+  border-color: #475569;
+  background: #f8fafc;
+}
+
+.welcome-custom:focus-visible {
+  outline: 3px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.welcome-medals {
+  width: 100%;
+}
+
+.welcome-links {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.welcome-link {
+  background: none;
+  border: none;
+  padding: 4px 6px;
+  font: inherit;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.welcome-link:hover {
+  color: #475569;
+}

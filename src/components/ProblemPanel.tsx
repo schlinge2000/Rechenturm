@@ -39,24 +39,37 @@ export function ProblemPanel({
 
   return (
     <div className="problem-panel">
-      <div className="problem-equation" aria-live="polite">
-        <span className="problem-operand">{problem.a}</span>
-        <span className="problem-operator">{symbol}</span>
-        <span className="problem-operand">{problem.b}</span>
-        <span className="problem-equals">=</span>
-        <span className={`problem-result ${solved ? 'problem-result--shown' : ''}`}>
-          {solved ? problem.result : '?'}
-        </span>
+      {/* Rückmeldung ohne eigene Zeile: „Richtig“ ersetzt die (dann ohnehin
+          gesperrten) Schritt-Buttons, „Noch nicht ganz“ zeigt der Fertig-Button.
+          Für Screenreader zusätzlich als Live-Region. */}
+      <span className="sr-only" aria-live="polite">
+        {solved ? 'Richtig!' : attemptFeedback === 'wrong' ? 'Noch nicht ganz.' : ''}
+      </span>
+
+      <div className="problem-top">
+        <div className="problem-equation" aria-live="polite">
+          <span className="problem-operand">{problem.a}</span>
+          <span className="problem-operator">{symbol}</span>
+          <span className="problem-operand">{problem.b}</span>
+          <span className="problem-equals">=</span>
+          <span className={`problem-result ${solved ? 'problem-result--shown' : ''}`}>
+            {solved ? problem.result : '?'}
+          </span>
+        </div>
+
+        <div className="counter" aria-live="polite">
+          <span className="counter-label">Du bist bei</span>
+          <span className={`counter-value ${solved ? 'counter-value--solved' : ''}`}>
+            {currentCount}
+          </span>
+        </div>
       </div>
 
-      <div className="counter" aria-live="polite">
-        <span className="counter-label">Du bist bei</span>
-        <span className={`counter-value ${solved ? 'counter-value--solved' : ''}`}>
-          {currentCount}
-        </span>
-      </div>
-
-      {renderStepButtons(problem, onStep, canIncrease, canDecrease, solved)}
+      {solved ? (
+        <div className="problem-solved">Richtig! 🎉</div>
+      ) : (
+        renderStepButtons(problem, onStep, canIncrease, canDecrease, solved)
+      )}
 
       <p className="hint">
         {problem.operation === 'plus' && (
@@ -69,13 +82,6 @@ export function ProblemPanel({
           <>Stapele <strong>{problem.a}</strong> Blöcke à <strong>{problem.b}</strong> Steinen — ein Tipp = ein Block.</>
         )}
       </p>
-
-      <div className="problem-feedback" aria-live="polite">
-        {solved && <span className="feedback feedback--correct">Richtig! 🎉</span>}
-        {!solved && attemptFeedback === 'wrong' && (
-          <span className="feedback feedback--wrong">Noch nicht ganz — schau nochmal nach.</span>
-        )}
-      </div>
 
       <div className="problem-actions">
         {solved ? (
@@ -91,10 +97,12 @@ export function ProblemPanel({
           <>
             <button
               type="button"
-              className="action action--primary"
+              className={`action action--primary${
+                attemptFeedback === 'wrong' ? ' action--wrong' : ''
+              }`}
               onClick={onConfirm}
             >
-              ✓ Fertig
+              {attemptFeedback === 'wrong' ? 'Noch nicht ganz' : '✓ Fertig'}
             </button>
             <button
               type="button"
