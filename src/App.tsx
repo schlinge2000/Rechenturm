@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ModeSelector } from './components/ModeSelector';
+import { AppMenu } from './components/AppMenu';
 import { Tower } from './components/Tower';
 import { ProblemPanel } from './components/ProblemPanel';
-import { Legend } from './components/Legend';
 import { MedalBar } from './components/MedalBar';
 import { CustomProblemForm } from './components/CustomProblemForm';
 import { Landing } from './components/Landing';
@@ -204,12 +203,19 @@ export default function App() {
   // Reihengrenzen hinweg zerrissen wirken.
   const showStaircaseToggle = problem.operation !== 'mal';
   const staircaseActive = game.staircase && showStaircaseToggle;
-  const legendVariant: 'decade' | 'block' =
-    problem.operation === 'mal' ? 'block' : 'decade';
 
   return (
     <div className="app">
       <header className="app-header">
+        <AppMenu
+          mode={mode}
+          onModeChange={handleModeChange}
+          showCustom={showCustom}
+          onCustomToggle={() => setShowCustom((s) => !s)}
+          showStaircaseToggle={showStaircaseToggle}
+          staircase={game.staircase}
+          onStaircaseToggle={handleStaircaseToggle}
+        />
         <div className="app-header-title">
           <h1>Rechenturm</h1>
           <p className="app-subtitle">Mathe zum Anschauen — eine Etage, zehn Stufen.</p>
@@ -220,35 +226,20 @@ export default function App() {
           onClick={handleLogout}
           title="Anderer Spieler"
         >
-          <span className="profile-chip-name">Hi, {profile.name}!</span>
+          <span className="profile-chip-name">
+            Hi, {profile.name}
+            <sup
+              key={game.solved}
+              className="profile-chip-solved"
+              title={`${game.solved} Aufgaben gelöst`}
+            >
+              {game.solved}
+            </sup>
+            !
+          </span>
           <span className="profile-chip-age">{profile.age}</span>
         </button>
       </header>
-
-      <section className="app-controls">
-        <ModeSelector mode={mode} onChange={handleModeChange} />
-        <div className="app-controls-right">
-          {showStaircaseToggle && (
-            <button
-              type="button"
-              className={`toggle-button ${game.staircase ? 'toggle-button--active' : ''}`}
-              onClick={handleStaircaseToggle}
-              aria-pressed={game.staircase}
-              title="Stufen innerhalb einer Etage als Treppe anzeigen"
-            >
-              🪜 Treppe
-            </button>
-          )}
-          <button
-            type="button"
-            className="toggle-button"
-            onClick={() => setShowCustom((s) => !s)}
-            aria-expanded={showCustom}
-          >
-            ✏️ Eigene Aufgabe
-          </button>
-        </div>
-      </section>
 
       {showCustom && (
         <CustomProblemForm
@@ -272,11 +263,6 @@ export default function App() {
           />
         </div>
         <aside className="app-side-col">
-          <MedalBar
-            solved={game.solved}
-            medals={game.medals}
-            justEarnedMedal={justEarnedMedal}
-          />
           <ProblemPanel
             problem={problem}
             currentCount={currentCount}
@@ -289,7 +275,11 @@ export default function App() {
             canIncrease={canIncrease}
             canDecrease={canDecrease}
           />
-          <Legend variant={legendVariant} />
+          <MedalBar
+            solved={game.solved}
+            medals={game.medals}
+            justEarnedMedal={justEarnedMedal}
+          />
         </aside>
       </main>
 
