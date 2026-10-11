@@ -6,8 +6,10 @@ function fill<T>(n: number, v: T): T[] {
   return Array.from({ length: n }, () => v);
 }
 
+// Bei Mal ist ein Schritt ein ganzer Block. a × b = a Blöcke à b Steinen
+// (3 × 4 = 4 + 4 + 4), wie in der Grundschule gelesen.
 export function stepSize(p: Problem): number {
-  return p.operation === 'mal' ? p.a : 1;
+  return p.operation === 'mal' ? p.b : 1;
 }
 
 export function initialCount(p: Problem): number {
@@ -52,7 +54,7 @@ export function computeCellStates(p: Problem, currentCount: number): CellState[]
 
   // mal — abwechselnde Gruppen, damit jeder gleiche Block sichtbar wird
   for (let i = 0; i < currentCount && i < TOWER_SIZE; i++) {
-    const groupIndex = Math.floor(i / Math.max(p.a, 1));
+    const groupIndex = Math.floor(i / Math.max(stepSize(p), 1));
     cells[i] = groupIndex % 2 === 0 ? { kind: 'base' } : { kind: 'added' };
   }
   return cells;
@@ -98,7 +100,7 @@ export function cursorRange(p: Problem, currentCount: number): NextRange | null 
   if (currentCount <= 0) return null;
 
   if (p.operation === 'mal') {
-    const from = Math.max(1, currentCount - p.a + 1);
+    const from = Math.max(1, currentCount - stepSize(p) + 1);
     return { from, to: currentCount, action: 'add' };
   }
   return {
