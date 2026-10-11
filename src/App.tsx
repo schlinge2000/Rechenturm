@@ -84,10 +84,10 @@ export default function App() {
 
   const colorFor = useMemo(() => {
     if (problem.operation === 'mal') {
-      return (n: number) => colorForBlock(n, problem.a);
+      return (n: number) => colorForBlock(n, stepSize(problem));
     }
     return colorForDecade;
-  }, [problem.operation, problem.a]);
+  }, [problem]);
 
   function loadProblem(next: Problem) {
     setProblem(next);
@@ -199,7 +199,7 @@ export default function App() {
 
   const canIncrease = !solved && currentCount < max;
   const canDecrease = !solved && currentCount > min;
-  const groupSize = problem.operation === 'mal' ? problem.a : undefined;
+  const groupSize = problem.operation === 'mal' ? stepSize(problem) : undefined;
   // Treppe macht im Mal-Modus optisch keinen Sinn — Blöcke würden über
   // Reihengrenzen hinweg zerrissen wirken.
   const showStaircaseToggle = problem.operation !== 'mal';

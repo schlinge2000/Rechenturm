@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { stepSize } from '../lib/towerState';
 import type { Problem } from '../lib/types';
 import './ProblemPanel.css';
 
@@ -65,7 +66,7 @@ export function ProblemPanel({
           <>Tippe auf den obersten Stein — nimm <strong>{problem.b}</strong> Steine weg.</>
         )}
         {problem.operation === 'mal' && (
-          <>Stapele <strong>{problem.b}</strong> Blöcke à <strong>{problem.a}</strong> Steinen — ein Tipp = ein Block.</>
+          <>Stapele <strong>{problem.a}</strong> Blöcke à <strong>{problem.b}</strong> Steinen — ein Tipp = ein Block.</>
         )}
       </p>
 
@@ -120,7 +121,7 @@ function renderStepButtons(
   const isMal = problem.operation === 'mal';
 
   if (isMal) {
-    const step = problem.a;
+    const step = stepSize(problem);
     return (
       <div className="step-buttons step-buttons--two" role="group" aria-label="Block-Buttons">
         <button
