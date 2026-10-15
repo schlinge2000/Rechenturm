@@ -109,7 +109,7 @@ export function Landing({ onStart }: LandingProps) {
   );
 }
 
-function TowerMark() {
+export function TowerMark() {
   // Schlankes SVG-Logo passend zum App-Icon
   return (
     <svg width="84" height="84" viewBox="0 0 100 100" role="img" aria-label="Rechenturm-Logo">

@@ -11,9 +11,10 @@ interface AppMenuProps {
   showStaircaseToggle: boolean;
   staircase: boolean;
   onStaircaseToggle: () => void;
+  onHome: () => void;
 }
 
-// Hamburger-Menü oben links: Rechenart, eigene Aufgabe, Treppe.
+// Hamburger-Menü oben links: Rechenart, eigene Aufgabe, Treppe, Startseite.
 // Schließt nach jeder Auswahl, bei Klick daneben und mit Escape.
 export function AppMenu({
   mode,
@@ -23,6 +24,7 @@ export function AppMenu({
   showStaircaseToggle,
   staircase,
   onStaircaseToggle,
+  onHome,
 }: AppMenuProps) {
   const [open, setOpen] = useState(false);
   const rootRef = useRef<HTMLDivElement>(null);
@@ -95,6 +97,12 @@ export function AppMenu({
               />
             </button>
           )}
+
+          <div className="app-menu-divider" />
+
+          <button type="button" className="app-menu-item" onClick={() => choose(onHome)}>
+            <span aria-hidden>🏠</span> Startseite
+          </button>
         </div>
       )}
     </div>

@@ -5,6 +5,7 @@ import { ProblemPanel } from './components/ProblemPanel';
 import { MedalBar } from './components/MedalBar';
 import { CustomProblemForm } from './components/CustomProblemForm';
 import { Landing } from './components/Landing';
+import { Welcome } from './components/Welcome';
 import { generateProblem } from './lib/problems';
 import {
   bounds,
@@ -32,6 +33,7 @@ import type { Mode, Problem } from './lib/types';
 import './App.css';
 
 type SolvedVia = 'won' | 'revealed' | null;
+type Screen = 'welcome' | 'play';
 
 function clamp(v: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, v));
@@ -46,6 +48,7 @@ export default function App() {
   const [game, setGame] = useState<GameState>(() => loadGameState());
   const [profile, setProfile] = useState<Profile | null>(() => loadProfile());
   const [showCustom, setShowCustom] = useState(false);
+  const [screen, setScreen] = useState<Screen>('welcome');
   const [justEarnedMedal, setJustEarnedMedal] = useState(false);
 
   const medalTimerRef = useRef<number | null>(null);
@@ -103,6 +106,12 @@ export default function App() {
     setMode(next);
     loadProblem(generateProblem(next));
     setShowCustom(false);
+    setScreen('play');
+  }
+
+  function handleHome() {
+    setShowCustom(false);
+    setScreen('welcome');
   }
 
   function handleNext() {
@@ -169,6 +178,7 @@ export default function App() {
   function handleCustomSubmit(p: Problem) {
     loadProblem(p);
     setShowCustom(false);
+    setScreen('play');
   }
 
   function handleStaircaseToggle() {
@@ -189,11 +199,45 @@ export default function App() {
     if (window.confirm('Anderer Spieler? Dein Fortschritt bleibt gespeichert.')) {
       clearProfile();
       setProfile(null);
+      setScreen('welcome');
     }
   }
 
   if (!profile) {
     return <Landing onStart={setProfile} />;
+  }
+
+  const customOverlay = showCustom && (
+    <div
+      className="modal"
+      onPointerDown={(e) => {
+        if (e.target === e.currentTarget) setShowCustom(false);
+      }}
+    >
+      <div className="modal-card">
+        <CustomProblemForm
+          onSubmit={handleCustomSubmit}
+          onCancel={() => setShowCustom(false)}
+        />
+      </div>
+    </div>
+  );
+
+  if (screen === 'welcome') {
+    return (
+      <>
+        <Welcome
+          profile={profile}
+          game={game}
+          lastMode={mode}
+          onStart={handleModeChange}
+          onCustom={() => setShowCustom(true)}
+          onSwitchPlayer={handleLogout}
+          onResetProgress={handleResetProgress}
+        />
+        {customOverlay}
+      </>
+    );
   }
 
   const canIncrease = !solved && currentCount < max;
@@ -204,9 +248,11 @@ export default function App() {
   const showStaircaseToggle = problem.operation !== 'mal';
   const staircaseActive = game.staircase && showStaircaseToggle;
 
+  // Rechen-Bildschirm: genau eine Bildschirmhöhe, der Turm nimmt sich den
+  // Platz, der nach Leiste, Aufgabe und Medaillen übrig bleibt.
   return (
-    <div className="app">
-      <header className="app-header">
+    <div className="play">
+      <header className="play-bar">
         <AppMenu
           mode={mode}
           onModeChange={handleModeChange}
@@ -215,16 +261,13 @@ export default function App() {
           showStaircaseToggle={showStaircaseToggle}
           staircase={game.staircase}
           onStaircaseToggle={handleStaircaseToggle}
+          onHome={handleHome}
         />
-        <div className="app-header-title">
-          <h1>Rechenturm</h1>
-          <p className="app-subtitle">Mathe zum Anschauen — eine Etage, zehn Stufen.</p>
-        </div>
         <button
           type="button"
           className="profile-chip"
-          onClick={handleLogout}
-          title="Anderer Spieler"
+          onClick={handleHome}
+          title="Zur Startseite"
         >
           <span className="profile-chip-name">
             Hi, {profile.name}
@@ -241,15 +284,8 @@ export default function App() {
         </button>
       </header>
 
-      {showCustom && (
-        <CustomProblemForm
-          onSubmit={handleCustomSubmit}
-          onCancel={() => setShowCustom(false)}
-        />
-      )}
-
-      <main className="app-main">
-        <div className="app-tower-col">
+      <main className="play-main">
+        <div className="play-tower">
           <Tower
             cells={cells}
             cursorRange={cursorR}
@@ -262,7 +298,7 @@ export default function App() {
             disabled={solved}
           />
         </div>
-        <aside className="app-side-col">
+        <div className="play-side">
           <ProblemPanel
             problem={problem}
             currentCount={currentCount}
@@ -275,13 +311,17 @@ export default function App() {
             canIncrease={canIncrease}
             canDecrease={canDecrease}
           />
-          <MedalBar
-            solved={game.solved}
-            medals={game.medals}
-            justEarnedMedal={justEarnedMedal}
-          />
-        </aside>
+        </div>
       </main>
+
+      <footer className="play-medals">
+        <MedalBar
+          solved={game.solved}
+          medals={game.medals}
+          justEarnedMedal={justEarnedMedal}
+          compact
+        />
+      </footer>
 
       {justEarnedMedal && (
         <div className="medal-celebration" role="status" aria-live="polite">
@@ -295,23 +335,7 @@ export default function App() {
         </div>
       )}
 
-      <footer className="app-footer">
-        <span>
-          {problem.operation === 'mal'
-            ? 'Tipp: Jeder Block hat seine eigene Farbe — leichter zum Zählen.'
-            : 'Tipp: Jede Etage hat ihre Farbe — links hell, rechts kräftig.'}
-        </span>
-        {game.solved > 0 && (
-          <button
-            type="button"
-            className="reset-link"
-            onClick={handleResetProgress}
-            title="Fortschritt zurücksetzen"
-          >
-            Fortschritt zurücksetzen
-          </button>
-        )}
-      </footer>
+      {customOverlay}
     </div>
   );
 }

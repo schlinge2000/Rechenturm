@@ -3,8 +3,25 @@
    =========================== */
 
 .tower {
-  --cell-size: 38px;
-  --step-rise: 4px; /* Versatz im Treppen-Modus */
+  --label-w: 56px;
+  --label-gap: 8px;
+  --cell-gap: 3px;
+  --floor-pad: 2px;
+  --rise-ratio: 0; /* Treppe: Versatz pro Stufe relativ zur Steingröße */
+  /* Der Turm füllt seinen Size-Container (.play-tower) so weit wie möglich.
+     Feste Breite/Höhe ohne die Steine — muss zu den Maßen unten passen:
+     fit-h = Rahmen 2×4 + Pfeiler 2×14 + Etagen-Padding 2×8 + Label + Lücken
+     fit-v = Dach 22+12 + Körper-Padding 2×8 + Etagen-Padding/-Linien + Boden 10 */
+  --fit-h: calc(52px + var(--label-w) + var(--label-gap) + 9 * var(--cell-gap));
+  --fit-v: calc(69px + 20 * var(--floor-pad));
+  /* Steine sind quadratisch: so groß, wie Breite UND Höhe es erlauben.
+     Im Treppen-Modus braucht jede Etage zusätzlich 9 × Versatz. */
+  --cell: min(
+    (100cqw - var(--fit-h)) / 10,
+    (100cqh - var(--fit-v)) / (10 + 90 * var(--rise-ratio))
+  );
+  --step-rise: calc(var(--cell) * var(--rise-ratio));
+  width: calc(var(--fit-h) + 10 * var(--cell));
   user-select: none;
   filter: drop-shadow(0 12px 30px rgba(15, 23, 42, 0.18));
 }
@@ -20,9 +37,9 @@
 .tower-roof-peak {
   width: 0;
   height: 0;
-  border-left: 28px solid transparent;
-  border-right: 28px solid transparent;
-  border-bottom: 28px solid #ef4444;
+  border-left: 26px solid transparent;
+  border-right: 26px solid transparent;
+  border-bottom: 22px solid #ef4444;
   filter: drop-shadow(0 -2px 0 rgba(0, 0, 0, 0.1));
 }
 
@@ -41,7 +58,7 @@
 .tower-roof-base {
   width: calc(100% - 8px);
   max-width: 560px;
-  height: 14px;
+  height: 12px;
   background: linear-gradient(180deg, #b45309 0%, #92400e 100%);
   border-radius: 6px 6px 0 0;
   box-shadow:
@@ -54,7 +71,7 @@
   display: grid;
   grid-template-columns: 14px 1fr 14px;
   gap: 0;
-  padding: 12px 0;
+  padding: 8px 0;
   background: linear-gradient(180deg, #e0f2fe 0%, #f8fafc 70%, #fef3c7 100%);
   border-left: 4px solid #78350f;
   border-right: 4px solid #78350f;
@@ -97,10 +114,10 @@
 /* --- Etage --- */
 .tower-floor {
   display: grid;
-  grid-template-columns: 56px 1fr;
-  gap: 8px;
+  grid-template-columns: var(--label-w) 1fr;
+  gap: var(--label-gap);
   align-items: center;
-  padding: 3px 0;
+  padding: var(--floor-pad) 0;
   border-bottom: 1px solid rgba(120, 53, 15, 0.15);
 }
 
@@ -110,6 +127,7 @@
 
 .tower-floor-label {
   font-size: 0.7rem;
+  white-space: nowrap;
   color: #78350f;
   text-align: right;
   font-variant-numeric: tabular-nums;
@@ -120,7 +138,7 @@
 .tower-floor-cells {
   display: grid;
   grid-template-columns: repeat(10, 1fr);
-  gap: 3px;
+  gap: var(--cell-gap);
   align-items: end;
 }
 
@@ -151,7 +169,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.65rem;
+  min-width: 0;
+  overflow: hidden;
+  font-size: clamp(7px, var(--cell) * 0.36, 15px);
   color: rgba(15, 23, 42, 0.3);
   padding: 0;
   font-family: inherit;
@@ -317,6 +337,10 @@
   padding-top: calc(9 * var(--step-rise));
 }
 
+.tower--staircase {
+  --rise-ratio: 0.08;
+}
+
 @keyframes drop-in {
   0% { transform: translateY(-12px); opacity: 0; }
   60% { transform: translateY(2px); opacity: 1; }
@@ -359,18 +383,13 @@
 
 @media (max-width: 720px) {
   .tower {
-    --cell-size: 28px;
-    --step-rise: 3px;
-  }
-  .tower-floor {
-    grid-template-columns: 40px 1fr;
-    gap: 6px;
+    --label-w: 44px;
+    --label-gap: 6px;
   }
   .tower-floor-label {
     font-size: 0.6rem;
   }
   .tower-cell {
-    font-size: 0.5rem;
     border-radius: 4px;
   }
   .tower-roof-base {
